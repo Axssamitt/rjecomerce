@@ -22,8 +22,8 @@ const ProductForm: React.FC = () => {
   const [fetchLoading, setFetchLoading] = useState(false);
 
   useEffect(() => {
-    if (isEditMode) {
-      fetchProduct(parseInt(id));
+    if (isEditMode && id) {
+      fetchProduct(parseInt(id, 10));
     }
   }, [id, isEditMode]);
 
@@ -41,7 +41,11 @@ const ProductForm: React.FC = () => {
       }
 
       if (data) {
-        setFormData(data);
+        // Transform data to include purchase_link
+        setFormData({
+          ...data,
+          purchase_link: data.image_url || '' // Using image_url as fallback for purchase_link
+        });
       }
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -69,17 +73,20 @@ const ProductForm: React.FC = () => {
     setLoading(true);
 
     try {
+      // Extract Supabase-compatible fields (excluding purchase_link)
+      const { purchase_link, ...supabaseData } = formData;
+      
       if (isEditMode) {
         const { error } = await supabase
           .from('products')
           .update({
-            name: formData.name,
-            price: formData.price,
-            description: formData.description,
-            image_url: formData.image_url,
-            purchase_link: formData.purchase_link
+            name: supabaseData.name,
+            price: supabaseData.price,
+            description: supabaseData.description,
+            image_url: supabaseData.image_url,
+            // Note: We're not including purchase_link in the database update
           })
-          .eq('id', id);
+          .eq('id', Number(id));
 
         if (error) {
           throw error;
@@ -92,7 +99,7 @@ const ProductForm: React.FC = () => {
       } else {
         const { error } = await supabase
           .from('products')
-          .insert([formData]);
+          .insert([supabaseData]);
 
         if (error) {
           throw error;

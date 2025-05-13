@@ -15,48 +15,42 @@ export interface Database {
           id: number
           name: string
           price: number
-          description: string
-          image_url: string
-          purchase_link: string
-          created_at: string
+          description: string | null
+          image_url: string | null
+          category_id: number | null
+          created_at: string | null
         }
         Insert: {
           id?: number
           name: string
           price: number
-          description: string
-          image_url: string
-          purchase_link: string
-          created_at?: string
+          description?: string | null
+          image_url?: string | null
+          category_id?: number | null
+          created_at?: string | null
         }
         Update: {
           id?: number
           name?: string
           price?: number
-          description?: string
-          image_url?: string
-          purchase_link?: string
-          created_at?: string
+          description?: string | null
+          image_url?: string | null
+          category_id?: number | null
+          created_at?: string | null
         }
       }
-      users: {
+      categories: {
         Row: {
           id: number
-          username: string
-          password_hash: string
-          created_at: string
+          name: string
         }
         Insert: {
           id?: number
-          username: string
-          password_hash: string
-          created_at?: string
+          name: string
         }
         Update: {
           id?: number
-          username?: string
-          password_hash?: string
-          created_at?: string
+          name?: string
         }
       }
     }
@@ -72,6 +66,21 @@ export interface Database {
   }
 }
 
-export type Product = Database['public']['Tables']['products']['Row'];
-export type NewProduct = Database['public']['Tables']['products']['Insert'];
-export type UpdateProduct = Database['public']['Tables']['products']['Update'];
+// Define user type separately since it's not in the Supabase schema
+export type User = {
+  id: number;
+  username: string;
+  password_hash: string;
+};
+
+export type Product = Database['public']['Tables']['products']['Row'] & {
+  purchase_link: string; // Add this field to maintain compatibility with existing code
+};
+
+export type NewProduct = Database['public']['Tables']['products']['Insert'] & {
+  purchase_link: string; // Add this field to maintain compatibility with existing code
+};
+
+export type UpdateProduct = Database['public']['Tables']['products']['Update'] & {
+  purchase_link?: string; // Add this field to maintain compatibility with existing code
+};

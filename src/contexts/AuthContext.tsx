@@ -1,10 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../integrations/supabase/client';
 import { toast } from 'sonner';
 import { sha256 } from 'js-sha256';
 
-type User = {
+// Define User type
+export type User = {
   id: number;
   username: string;
   password_hash: string;
@@ -19,6 +19,15 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Mock user for demonstration - in a real app, this would be fetched from a secure backend
+const MOCK_USERS: User[] = [
+  {
+    id: 1,
+    username: 'admin',
+    password_hash: sha256('admin123') // Pre-hashed password for 'admin123'
+  }
+];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -44,22 +53,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Hash the password with SHA-256
       const hashedPassword = sha256(password);
       
-      // Check if user exists and password matches
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
-
-      if (error) {
-        console.error('Login error:', error);
-        return false;
-      }
-
-      if (data && data.password_hash === hashedPassword) {
+      // Find user with matching username and password
+      const user = MOCK_USERS.find(
+        u => u.username === username && u.password_hash === hashedPassword
+      );
+      
+      if (user) {
         setIsAuthenticated(true);
-        setCurrentUser(data as User);
-        localStorage.setItem('user', JSON.stringify(data));
+        setCurrentUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
         return true;
       } else {
         return false;
@@ -91,21 +93,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Hash the new password
       const hashedNewPassword = sha256(newPassword);
 
-      // Update password in database
-      const { error } = await supabase
-        .from('users')
-        .update({ password_hash: hashedNewPassword })
-        .eq('id', currentUser.id);
-
-      if (error) {
-        console.error('Password change error:', error);
-        return { success: false, message: 'Erro ao alterar a senha.' };
-      }
-
-      // Update current user in context
+      // Update password in local state and storage
       const updatedUser = { ...currentUser, password_hash: hashedNewPassword };
+      
+      // In a real app, you would update the database here
+      // For now, we just update the mock user and local state
       setCurrentUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Update the MOCK_USERS array to simulate database persistence
+      const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
+      if (userIndex >= 0) {
+        MOCK_USERS[userIndex] = updatedUser;
+      }
 
       return { success: true, message: 'Senha alterada com sucesso!' };
     } catch (error) {

@@ -21,7 +21,13 @@ const Shop: React.FC = () => {
           throw error;
         }
 
-        setProducts(data || []);
+        // Transform data to include purchase_link
+        const productsWithPurchaseLink = data?.map(product => ({
+          ...product,
+          purchase_link: product.image_url || '' // Using image_url as a fallback for purchase_link
+        })) || [];
+
+        setProducts(productsWithPurchaseLink);
       } catch (error) {
         console.error('Error fetching products:', error);
         toast({

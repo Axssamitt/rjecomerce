@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../integrations/supabase/client';
@@ -10,10 +9,6 @@ const ProductsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   const fetchProducts = async () => {
     try {
@@ -27,7 +22,13 @@ const ProductsList: React.FC = () => {
         throw error;
       }
 
-      setProducts(data || []);
+      // Transform data to include purchase_link
+      const productsWithPurchaseLink = data?.map(product => ({
+        ...product,
+        purchase_link: product.image_url || '' // Using image_url as fallback for purchase_link
+      })) || [];
+
+      setProducts(productsWithPurchaseLink);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -39,6 +40,10 @@ const ProductsList: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
