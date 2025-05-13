@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../integrations/supabase/client';
 import { Product, NewProduct } from '../../types/supabase';
 import { useToast } from '@/hooks/use-toast';
 
