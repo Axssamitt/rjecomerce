@@ -24,6 +24,77 @@ export type Database = {
         }
         Relationships: []
       }
+      company_info: {
+        Row: {
+          address: string | null
+          email: string | null
+          facebook: string | null
+          id: number
+          instagram: string | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: number
+          instagram?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: number
+          instagram?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      product_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_path: string | null
+          image_url: string
+          is_main: boolean | null
+          product_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          image_url: string
+          is_main?: boolean | null
+          product_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          image_url?: string
+          is_main?: boolean | null
+          product_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: number | null
@@ -33,6 +104,7 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
+          purchase_link: string | null
         }
         Insert: {
           category_id?: number | null
@@ -42,6 +114,7 @@ export type Database = {
           image_url?: string | null
           name: string
           price: number
+          purchase_link?: string | null
         }
         Update: {
           category_id?: number | null
@@ -51,6 +124,7 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          purchase_link?: string | null
         }
         Relationships: [
           {
@@ -61,6 +135,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          id: number
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -2,12 +2,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { sha256 } from 'js-sha256';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define User type
 export type User = {
   id: number;
   username: string;
   password_hash: string;
+  created_at?: string;
 };
 
 interface AuthContextType {
@@ -16,22 +18,17 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
+  registerUser: (username: string, password: string) => Promise<{ success: boolean; message: string }>;
+  users: User[];
+  fetchUsers: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for demonstration - in a real app, this would be fetched from a secure backend
-const MOCK_USERS: User[] = [
-  {
-    id: 1,
-    username: 'admin',
-    password_hash: sha256('admin123') // Pre-hashed password for 'admin123'
-  }
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
   // Check if there's a saved session
   useEffect(() => {
@@ -46,26 +43,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('user');
       }
     }
+    
+    // Fetch users on initial load
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+        return;
+      }
+      
+      setUsers(data as User[]);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       // Hash the password with SHA-256
       const hashedPassword = sha256(password);
       
-      // Find user with matching username and password
-      const user = MOCK_USERS.find(
-        u => u.username === username && u.password_hash === hashedPassword
-      );
+      // Find user with matching username and password in Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .eq('password_hash', hashedPassword)
+        .single();
       
-      if (user) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        localStorage.setItem('user', JSON.stringify(user));
-        return true;
-      } else {
+      if (error || !data) {
+        console.error('Login error:', error);
         return false;
       }
+      
+      const user = data as User;
+      setIsAuthenticated(true);
+      setCurrentUser(user);
+      localStorage.setItem('user', JSON.stringify(user));
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -93,20 +115,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Hash the new password
       const hashedNewPassword = sha256(newPassword);
 
+      // Update password in Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({ password_hash: hashedNewPassword })
+        .eq('id', currentUser.id);
+      
+      if (error) {
+        console.error('Password update error:', error);
+        return { success: false, message: 'Erro ao atualizar senha no banco de dados.' };
+      }
+
       // Update password in local state and storage
       const updatedUser = { ...currentUser, password_hash: hashedNewPassword };
-      
-      // In a real app, you would update the database here
-      // For now, we just update the mock user and local state
       setCurrentUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      // Update the MOCK_USERS array to simulate database persistence
-      const userIndex = MOCK_USERS.findIndex(u => u.id === currentUser.id);
-      if (userIndex >= 0) {
-        MOCK_USERS[userIndex] = updatedUser;
-      }
-
       return { success: true, message: 'Senha alterada com sucesso!' };
     } catch (error) {
       console.error('Password change error:', error);
@@ -114,8 +138,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const registerUser = async (username: string, password: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      // Check if username already exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username);
+      
+      if (checkError) {
+        console.error('Error checking existing user:', checkError);
+        return { success: false, message: 'Erro ao verificar se o usuário já existe.' };
+      }
+      
+      if (existingUser && existingUser.length > 0) {
+        return { success: false, message: 'Este nome de usuário já está em uso.' };
+      }
+      
+      // Hash the password with SHA-256
+      const hashedPassword = sha256(password);
+      
+      // Insert new user into Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .insert([
+          { username, password_hash: hashedPassword }
+        ])
+        .select();
+      
+      if (error) {
+        console.error('User registration error:', error);
+        return { success: false, message: 'Erro ao registrar usuário.' };
+      }
+      
+      // Refresh users list
+      await fetchUsers();
+      
+      return { success: true, message: 'Usuário registrado com sucesso!' };
+    } catch (error) {
+      console.error('User registration error:', error);
+      return { success: false, message: 'Erro ao registrar usuário.' };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout, changePassword }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      currentUser, 
+      login, 
+      logout, 
+      changePassword,
+      registerUser,
+      users,
+      fetchUsers
+    }}>
       {children}
     </AuthContext.Provider>
   );

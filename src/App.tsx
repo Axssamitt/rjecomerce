@@ -18,6 +18,7 @@ import AdminLayout from './pages/Admin/AdminLayout';
 import ProductsList from './pages/Admin/ProductsList';
 import ProductForm from './pages/Admin/ProductForm';
 import ChangePassword from './pages/Admin/ChangePassword';
+import UserManagement from './pages/Admin/UserManagement';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
                   <Route path="add-product" element={<ProductForm />} />
                   <Route path="edit-product/:id" element={<ProductForm />} />
                   <Route path="change-password" element={<ChangePassword />} />
+                  <Route path="users" element={<UserManagement />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />
