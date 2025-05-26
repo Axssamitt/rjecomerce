@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../integrations/supabase/client';
 import { Product, NewProduct } from '../../types/supabase';
 import { useToast } from '@/hooks/use-toast';
+import ImageUpload from '../../components/ImageUpload';
 
 const ProductForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,10 +42,12 @@ const ProductForm: React.FC = () => {
       }
 
       if (data) {
-        // Transform data to include purchase_link
         setFormData({
-          ...data,
-          purchase_link: data.image_url || '' // Using image_url as fallback for purchase_link
+          name: data.name,
+          price: data.price,
+          description: data.description || '',
+          image_url: data.image_url || '',
+          purchase_link: data.purchase_link || ''
         });
       }
     } catch (error) {
@@ -68,24 +71,37 @@ const ProductForm: React.FC = () => {
     });
   };
 
+  const handleImageUploaded = (url: string) => {
+    setFormData({
+      ...formData,
+      image_url: url
+    });
+  };
+
+  const handleImageRemoved = () => {
+    setFormData({
+      ...formData,
+      image_url: ''
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Extract Supabase-compatible fields (excluding purchase_link)
-      const { purchase_link, ...supabaseData } = formData;
-      
+      const dataToSubmit = {
+        name: formData.name,
+        price: formData.price,
+        description: formData.description,
+        image_url: formData.image_url,
+        purchase_link: formData.purchase_link
+      };
+
       if (isEditMode) {
         const { error } = await supabase
           .from('products')
-          .update({
-            name: supabaseData.name,
-            price: supabaseData.price,
-            description: supabaseData.description,
-            image_url: supabaseData.image_url,
-            // Note: We're not including purchase_link in the database update
-          })
+          .update(dataToSubmit)
           .eq('id', Number(id));
 
         if (error) {
@@ -99,7 +115,7 @@ const ProductForm: React.FC = () => {
       } else {
         const { error } = await supabase
           .from('products')
-          .insert([supabaseData]);
+          .insert([dataToSubmit]);
 
         if (error) {
           throw error;
@@ -182,14 +198,11 @@ const ProductForm: React.FC = () => {
         </div>
         
         <div className="mb-4">
-          <label htmlFor="product-image_url" className="block gold-text mb-2">URL da Imagem</label>
-          <input 
-            type="url" 
-            id="product-image_url" 
-            value={formData.image_url}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 bg-dark-800 border-gold-500 text-white" 
-            required
+          <label className="block gold-text mb-2">Imagem do Produto</label>
+          <ImageUpload 
+            onImageUploaded={handleImageUploaded}
+            currentImage={formData.image_url}
+            onImageRemoved={handleImageRemoved}
           />
         </div>
         

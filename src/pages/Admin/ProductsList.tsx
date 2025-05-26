@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../integrations/supabase/client';
@@ -22,13 +23,7 @@ const ProductsList: React.FC = () => {
         throw error;
       }
 
-      // Transform data to include purchase_link
-      const productsWithPurchaseLink = data?.map(product => ({
-        ...product,
-        purchase_link: product.image_url || '' // Using image_url as fallback for purchase_link
-      })) || [];
-
-      setProducts(productsWithPurchaseLink);
+      setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -114,11 +109,17 @@ const ProductsList: React.FC = () => {
                 <tr key={product.id} className="table-row">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex-shrink-0 h-10 w-10">
-                      <img 
-                        className="h-10 w-10 rounded-full object-cover" 
-                        src={product.image_url} 
-                        alt={product.name}
-                      />
+                      {product.image_url ? (
+                        <img 
+                          className="h-10 w-10 rounded-full object-cover" 
+                          src={product.image_url} 
+                          alt={product.name}
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <span className="text-gray-500 text-xs">Sem imagem</span>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -128,7 +129,9 @@ const ProductsList: React.FC = () => {
                     <div className="text-sm gold-text">R$ {product.price.toFixed(2)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-300 truncate max-w-xs">{product.purchase_link}</div>
+                    <div className="text-sm text-gray-300 truncate max-w-xs">
+                      {product.purchase_link || 'N/A'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                     <button 
