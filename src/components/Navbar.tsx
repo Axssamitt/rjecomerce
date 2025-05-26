@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-dark-900 text-gold-500 shadow-lg border-b border-gold-500">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold flex items-center metallic-gold">
+        <Link to="/" className="text-2xl font-bold flex items-center">
           <ShoppingCart className="mr-2" />
           RJ Ecommerce
         </Link>
