@@ -2,16 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 
 const UserManagement: React.FC = () => {
   const { users, fetchUsers, registerUser } = useAuth();
   const { toast } = useToast();
   
   const [newUser, setNewUser] = useState({
-    username: '',
+    email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    username: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ const UserManagement: React.FC = () => {
     e.preventDefault();
     
     // Validate inputs
-    if (!newUser.username || !newUser.password || !newUser.confirmPassword) {
+    if (!newUser.email || !newUser.password || !newUser.confirmPassword) {
       toast({
         title: "Erro",
         description: "Todos os campos são obrigatórios.",
@@ -51,10 +52,20 @@ const UserManagement: React.FC = () => {
       return;
     }
     
+    // Check password length
+    if (newUser.password.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      const result = await registerUser(newUser.username, newUser.password);
+      const result = await registerUser(newUser.email, newUser.password, newUser.username);
       
       if (result.success) {
         toast({
@@ -64,9 +75,10 @@ const UserManagement: React.FC = () => {
         
         // Reset form
         setNewUser({
-          username: '',
+          email: '',
           password: '',
-          confirmPassword: ''
+          confirmPassword: '',
+          username: ''
         });
       } else {
         toast({
@@ -100,16 +112,27 @@ const UserManagement: React.FC = () => {
       >
         <h3 className="text-xl gold-text mb-4">Adicionar Novo Usuário</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label htmlFor="username" className="block gold-text mb-2">Nome de Usuário</label>
+            <label htmlFor="email" className="block gold-text mb-2">Email</label>
+            <input 
+              type="email"
+              id="email"
+              value={newUser.email}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 bg-dark-800 border-gold-500 text-white" 
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="username" className="block gold-text mb-2">Nome de Usuário (opcional)</label>
             <input 
               type="text"
               id="username"
               value={newUser.username}
               onChange={handleChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 bg-dark-800 border-gold-500 text-white" 
-              required
             />
           </div>
           
@@ -159,6 +182,7 @@ const UserManagement: React.FC = () => {
             <thead>
               <tr className="border-b border-gold-500">
                 <th className="px-4 py-2 text-left gold-text">ID</th>
+                <th className="px-4 py-2 text-left gold-text">Email</th>
                 <th className="px-4 py-2 text-left gold-text">Nome de Usuário</th>
                 <th className="px-4 py-2 text-left gold-text">Data de Criação</th>
               </tr>
@@ -167,8 +191,9 @@ const UserManagement: React.FC = () => {
               {users.length > 0 ? (
                 users.map((user) => (
                   <tr key={user.id} className="border-b border-dark-600 hover:bg-dark-600">
-                    <td className="px-4 py-2 text-white">{user.id}</td>
-                    <td className="px-4 py-2 text-white">{user.username}</td>
+                    <td className="px-4 py-2 text-white">{user.id.substring(0, 8)}...</td>
+                    <td className="px-4 py-2 text-white">{user.email || 'N/A'}</td>
+                    <td className="px-4 py-2 text-white">{user.username || 'N/A'}</td>
                     <td className="px-4 py-2 text-white">
                       {user.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}
                     </td>
@@ -176,7 +201,7 @@ const UserManagement: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-4 py-4 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-4 text-center text-gray-400">
                     Nenhum usuário encontrado
                   </td>
                 </tr>

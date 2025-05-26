@@ -1,25 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { sha256 } from 'js-sha256';
 import { supabase } from '@/integrations/supabase/client';
-
-// Define User type
-export type User = {
-  id: number;
-  username: string;
-  password_hash: string;
-  created_at?: string;
-};
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
-  registerUser: (username: string, password: string) => Promise<{ success: boolean; message: string }>;
-  users: User[];
+  changePassword: (newPassword: string) => Promise<{ success: boolean; message: string }>;
+  registerUser: (email: string, password: string, username?: string) => Promise<{ success: boolean; message: string }>;
+  users: any[];
   fetchUsers: () => Promise<void>;
 }
 
@@ -28,30 +21,34 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [session, setSession] = useState<Session | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
 
-  // Check if there's a saved session
+  // Set up auth state listener
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('user');
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setCurrentUser(session?.user ?? null);
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setCurrentUser(session?.user ?? null);
+        setIsAuthenticated(!!session);
       }
-    }
-    
-    // Fetch users on initial load
-    fetchUsers();
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*');
       
       if (error) {
@@ -59,34 +56,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      setUsers(data as User[]);
+      setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Hash the password with SHA-256
-      const hashedPassword = sha256(password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Find user with matching username and password in Supabase
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .eq('password_hash', hashedPassword)
-        .single();
-      
-      if (error || !data) {
+      if (error) {
         console.error('Login error:', error);
         return false;
       }
       
-      const user = data as User;
-      setIsAuthenticated(true);
-      setCurrentUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -94,42 +81,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  const changePassword = async (newPassword: string): Promise<{ success: boolean; message: string }> => {
     try {
       if (!currentUser) {
         return { success: false, message: 'Usuário não autenticado.' };
       }
 
-      // Check if current password is correct
-      const hashedCurrentPassword = sha256(currentPassword);
-      if (hashedCurrentPassword !== currentUser.password_hash) {
-        return { success: false, message: 'A senha atual está incorreta.' };
-      }
-
-      // Hash the new password
-      const hashedNewPassword = sha256(newPassword);
-
-      // Update password in Supabase
-      const { error } = await supabase
-        .from('users')
-        .update({ password_hash: hashedNewPassword })
-        .eq('id', currentUser.id);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
       
       if (error) {
         console.error('Password update error:', error);
-        return { success: false, message: 'Erro ao atualizar senha no banco de dados.' };
+        return { success: false, message: 'Erro ao atualizar senha.' };
       }
-
-      // Update password in local state and storage
-      const updatedUser = { ...currentUser, password_hash: hashedNewPassword };
-      setCurrentUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
       
       return { success: true, message: 'Senha alterada com sucesso!' };
     } catch (error) {
@@ -138,37 +111,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const registerUser = async (username: string, password: string): Promise<{ success: boolean; message: string }> => {
+  const registerUser = async (email: string, password: string, username?: string): Promise<{ success: boolean; message: string }> => {
     try {
-      // Check if username already exists
-      const { data: existingUser, error: checkError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username);
-      
-      if (checkError) {
-        console.error('Error checking existing user:', checkError);
-        return { success: false, message: 'Erro ao verificar se o usuário já existe.' };
-      }
-      
-      if (existingUser && existingUser.length > 0) {
-        return { success: false, message: 'Este nome de usuário já está em uso.' };
-      }
-      
-      // Hash the password with SHA-256
-      const hashedPassword = sha256(password);
-      
-      // Insert new user into Supabase
-      const { data, error } = await supabase
-        .from('users')
-        .insert([
-          { username, password_hash: hashedPassword }
-        ])
-        .select();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username || email.split('@')[0]
+          }
+        }
+      });
       
       if (error) {
         console.error('User registration error:', error);
-        return { success: false, message: 'Erro ao registrar usuário.' };
+        return { success: false, message: error.message || 'Erro ao registrar usuário.' };
       }
       
       // Refresh users list
@@ -184,7 +141,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
-      currentUser, 
+      currentUser,
+      session,
       login, 
       logout, 
       changePassword,
