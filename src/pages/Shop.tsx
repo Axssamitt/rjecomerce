@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Product } from '../types/supabase';
 import { useToast } from '@/hooks/use-toast';
+import ProductCard from '../components/ProductCard';
 
 const Shop: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,43 +55,9 @@ const Shop: React.FC = () => {
           <p className="text-xl">Nenhum produto disponível no momento.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
           {products.map((product) => (
-            <div 
-              key={product.id} 
-              className="product-card bg-dark-700 rounded-xl shadow-md overflow-hidden transition duration-300 border border-gold-500"
-            >
-              <div className="h-48 overflow-hidden">
-                {product.image_url ? (
-                  <img 
-                    src={product.image_url} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-500">Sem imagem</span>
-                  </div>
-                )}
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold gold-text mb-2">{product.name}</h3>
-                <p className="text-gray-300 mb-4">{product.description}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold gold-text">R$ {product.price.toFixed(2)}</span>
-                  {product.purchase_link && (
-                    <a 
-                      href={product.purchase_link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 gold-bg text-dark-900 rounded-lg hover:bg-gold-600 transition duration-300"
-                    >
-                      Comprar Agora
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       )}
