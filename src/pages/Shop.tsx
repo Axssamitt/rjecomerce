@@ -55,7 +55,7 @@ const Shop: React.FC = () => {
           <p className="text-xl">Nenhum produto disponível no momento.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-3 gap-2 md:gap-8">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

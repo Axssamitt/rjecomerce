@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Product } from '../types/supabase';
 import { AspectRatio } from './ui/aspect-ratio';
+import { useIsMobile } from '../hooks/use-mobile';
 
 interface ProductCardProps {
   product: Product;
@@ -9,6 +10,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const isMobile = useIsMobile();
 
   const toggleDescription = () => {
     setIsDescriptionExpanded(!isDescriptionExpanded);
@@ -25,18 +27,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         ) : (
           <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-            <span className="text-gray-500">Sem imagem</span>
+            <span className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>Sem imagem</span>
           </div>
         )}
       </AspectRatio>
       
-      <div className="p-6">
-        <h3 className="text-xl font-semibold gold-text mb-2">{product.name}</h3>
+      <div className={`${isMobile ? 'p-2' : 'p-6'}`}>
+        <h3 className={`font-semibold gold-text mb-2 ${isMobile ? 'text-sm' : 'text-xl'}`}>
+          {product.name}
+        </h3>
         
         {product.description && (
-          <div className="mb-4">
+          <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
             <p 
               className={`text-gray-300 cursor-pointer transition-all duration-300 ${
+                isMobile ? 'text-xs leading-tight' : 'text-sm'
+              } ${
                 isDescriptionExpanded 
                   ? '' 
                   : 'line-clamp-3 overflow-hidden'
@@ -51,10 +57,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             >
               {product.description}
             </p>
-            {product.description.length > 150 && (
+            {product.description.length > (isMobile ? 100 : 150) && (
               <button 
                 onClick={toggleDescription}
-                className="text-gold-500 text-sm mt-1 hover:text-gold-600 transition-colors"
+                className={`text-gold-500 mt-1 hover:text-gold-600 transition-colors ${
+                  isMobile ? 'text-xs' : 'text-sm'
+                }`}
               >
                 {isDescriptionExpanded ? 'Ver menos' : 'Ver mais'}
               </button>
@@ -62,14 +70,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
         
-        <div className="flex justify-between items-center">
-          <span className="text-2xl font-bold gold-text">R$ {product.price.toFixed(2)}</span>
+        <div className={`flex ${isMobile ? 'flex-col gap-1' : 'justify-between items-center'}`}>
+          <span className={`font-bold gold-text ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+            R$ {product.price.toFixed(2)}
+          </span>
           {product.purchase_link && (
             <a 
               href={product.purchase_link} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="px-4 py-2 gold-bg text-dark-900 rounded-lg hover:bg-gold-600 transition duration-300"
+              className={`gold-bg text-dark-900 rounded-lg hover:bg-gold-600 transition duration-300 text-center ${
+                isMobile ? 'px-2 py-1 text-xs mt-1' : 'px-4 py-2'
+              }`}
             >
               Comprar Agora
             </a>
