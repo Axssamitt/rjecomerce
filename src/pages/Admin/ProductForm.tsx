@@ -5,6 +5,7 @@ import { supabase } from '../../integrations/supabase/client';
 import { Product, NewProduct } from '../../types/supabase';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '../../components/ImageUpload';
+import CategoryCombobox from '../../components/CategoryCombobox';
 
 const ProductForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +18,8 @@ const ProductForm: React.FC = () => {
     price: 0,
     description: '',
     image_url: '',
-    purchase_link: ''
+    purchase_link: '',
+    category_id: null
   });
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -47,7 +49,8 @@ const ProductForm: React.FC = () => {
           price: data.price,
           description: data.description || '',
           image_url: data.image_url || '',
-          purchase_link: data.purchase_link || ''
+          purchase_link: data.purchase_link || '',
+          category_id: data.category_id || null
         });
       }
     } catch (error) {
@@ -68,6 +71,13 @@ const ProductForm: React.FC = () => {
     setFormData({
       ...formData,
       [id.replace('product-', '')]: id === 'product-price' ? parseFloat(value) : value
+    });
+  };
+
+  const handleCategoryChange = (categoryId: number | null) => {
+    setFormData({
+      ...formData,
+      category_id: categoryId
     });
   };
 
@@ -95,7 +105,8 @@ const ProductForm: React.FC = () => {
         price: formData.price,
         description: formData.description,
         image_url: formData.image_url,
-        purchase_link: formData.purchase_link
+        purchase_link: formData.purchase_link,
+        category_id: formData.category_id
       };
 
       if (isEditMode) {
@@ -169,6 +180,15 @@ const ProductForm: React.FC = () => {
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 bg-dark-800 border-gold-500 text-white" 
             required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block gold-text mb-2">Categoria</label>
+          <CategoryCombobox
+            value={formData.category_id}
+            onValueChange={handleCategoryChange}
+            placeholder="Selecionar ou criar categoria..."
           />
         </div>
         
