@@ -60,6 +60,33 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          page_path: string
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          page_path: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          page_path?: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           created_at: string
@@ -88,6 +115,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          product_id: number
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          product_id: number
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          product_id?: number
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_views_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -183,7 +245,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      dashboard_stats: {
+        Row: {
+          month_page_views: number | null
+          month_product_views: number | null
+          today_page_views: number | null
+          today_product_views: number | null
+          total_products: number | null
+          week_page_views: number | null
+          week_product_views: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

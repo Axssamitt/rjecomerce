@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Package, Plus, Key, Users } from 'lucide-react';
+import { Package, Plus, Key, Users, BarChart3 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
   return (
@@ -17,6 +17,18 @@ const AdminLayout: React.FC = () => {
               <NavLink 
                 to="/admin" 
                 end
+                className={({ isActive }) => 
+                  `flex items-center p-3 rounded-lg transition-all ${
+                    isActive 
+                    ? 'bg-gold-500 text-dark-900' 
+                    : 'text-white hover:bg-dark-600'
+                  }`
+                }
+              >
+                <BarChart3 size={20} className="mr-2" /> Dashboard
+              </NavLink>
+              <NavLink 
+                to="/admin/products" 
                 className={({ isActive }) => 
                   `flex items-center p-3 rounded-lg transition-all ${
                     isActive 

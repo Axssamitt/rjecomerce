@@ -15,6 +15,7 @@ import Shop from './pages/Shop';
 import Login from './pages/Login';
 import Logout from './pages/Logout';
 import AdminLayout from './pages/Admin/AdminLayout';
+import Dashboard from './pages/Admin/Dashboard';
 import ProductsList from './pages/Admin/ProductsList';
 import ProductForm from './pages/Admin/ProductForm';
 import ChangePassword from './pages/Admin/ChangePassword';
@@ -44,7 +45,8 @@ const App = () => (
                     <AdminLayout />
                   </ProtectedRoute>
                 }>
-                  <Route index element={<ProductsList />} />
+                  <Route index element={<Dashboard />} />
+                  <Route path="products" element={<ProductsList />} />
                   <Route path="add-product" element={<ProductForm />} />
                   <Route path="edit-product/:id" element={<ProductForm />} />
                   <Route path="change-password" element={<ChangePassword />} />

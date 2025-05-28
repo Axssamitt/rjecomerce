@@ -3,12 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Product } from '../types/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { usePageView } from '../hooks/useAnalytics';
 import ProductCard from '../components/ProductCard';
 
 const Shop: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Rastrear visualização da página da loja
+  usePageView('/');
 
   useEffect(() => {
     const fetchProducts = async () => {
