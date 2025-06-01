@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Product } from '../types/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { usePageView } from '../hooks/useAnalytics';
 import ProductCard from '../components/ProductCard';
-import CategoryCombobox from '../components/CategoryCombobox';
+import CategoryFilter from '../components/CategoryFilter';
 
 const Shop: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -78,7 +77,7 @@ const Shop: React.FC = () => {
       {/* Filtro de Categorias */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <div className="w-full sm:w-80">
-          <CategoryCombobox
+          <CategoryFilter
             value={selectedCategory}
             onValueChange={handleCategoryChange}
             placeholder="Filtrar por categoria..."
