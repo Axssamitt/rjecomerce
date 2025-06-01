@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Product } from '../types/supabase';
@@ -19,15 +20,18 @@ const Shop: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.log('Fetching products...');
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .order('id', { ascending: false });
 
         if (error) {
+          console.error('Error fetching products:', error);
           throw error;
         }
 
+        console.log('Products fetched:', data);
         setProducts(data || []);
         setFilteredProducts(data || []);
       } catch (error) {
@@ -46,15 +50,23 @@ const Shop: React.FC = () => {
   }, [toast]);
 
   useEffect(() => {
+    console.log('Filtering products. Selected category:', selectedCategory);
+    console.log('All products:', products);
+    
     if (selectedCategory === null) {
       setFilteredProducts(products);
     } else {
-      const filtered = products.filter(product => product.category_id === selectedCategory);
+      const filtered = products.filter(product => {
+        console.log(`Product ${product.name} category_id:`, product.category_id, 'Selected:', selectedCategory);
+        return product.category_id === selectedCategory;
+      });
+      console.log('Filtered products:', filtered);
       setFilteredProducts(filtered);
     }
   }, [selectedCategory, products]);
 
   const handleCategoryChange = (categoryId: number | null) => {
+    console.log('Category changed to:', categoryId);
     setSelectedCategory(categoryId);
   };
 
@@ -91,6 +103,13 @@ const Shop: React.FC = () => {
             Limpar filtro
           </button>
         )}
+      </div>
+
+      {/* Debug info - remove this after testing */}
+      <div className="mb-4 text-sm text-gray-400">
+        <p>Categoria selecionada: {selectedCategory || 'Todas'}</p>
+        <p>Total de produtos: {products.length}</p>
+        <p>Produtos filtrados: {filteredProducts.length}</p>
       </div>
 
       {/* Lista de Produtos */}

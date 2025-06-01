@@ -45,15 +45,22 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      console.log('Fetching categories...');
+      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
+      }
+      
+      console.log('Categories fetched:', data);
       setCategories(data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error in fetchCategories:', error);
     } finally {
       setLoading(false);
     }
@@ -85,12 +92,29 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
               {loading ? 'Carregando...' : 'Nenhuma categoria encontrada.'}
             </CommandEmpty>
             <CommandGroup>
+              {/* Add option to show all products */}
+              <CommandItem
+                value="todos"
+                onSelect={() => {
+                  onValueChange(null);
+                  setOpen(false);
+                }}
+                className="text-white hover:bg-dark-600"
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value === null ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                Todas as categorias
+              </CommandItem>
               {categories.map((category) => (
                 <CommandItem
                   key={category.id}
                   value={category.name}
                   onSelect={() => {
-                    onValueChange(category.id === value ? null : category.id);
+                    onValueChange(category.id);
                     setOpen(false);
                   }}
                   className="text-white hover:bg-dark-600"
