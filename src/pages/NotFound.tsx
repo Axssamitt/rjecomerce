@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ const NotFound: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [navigate]);
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark-800">
       <div className="text-center px-4">
