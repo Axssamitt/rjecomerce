@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from './contexts/AuthContext';
+import { HashRouter as Router } from "react-router-dom";
 
 // Components
 import Navbar from './components/Navbar';
@@ -15,9 +16,11 @@ import Shop from './pages/Shop';
 import Login from './pages/Login';
 import Logout from './pages/Logout';
 import AdminLayout from './pages/Admin/AdminLayout';
+import Dashboard from './pages/Admin/Dashboard';
 import ProductsList from './pages/Admin/ProductsList';
 import ProductForm from './pages/Admin/ProductForm';
 import ChangePassword from './pages/Admin/ChangePassword';
+import UserManagement from './pages/Admin/UserManagement';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -28,7 +31,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <Router>
           <div className="min-h-screen flex flex-col bg-dark-800">
             <Navbar />
             <div className="flex-grow">
@@ -43,17 +46,19 @@ const App = () => (
                     <AdminLayout />
                   </ProtectedRoute>
                 }>
-                  <Route index element={<ProductsList />} />
+                  <Route index element={<Dashboard />} />
+                  <Route path="products" element={<ProductsList />} />
                   <Route path="add-product" element={<ProductForm />} />
                   <Route path="edit-product/:id" element={<ProductForm />} />
                   <Route path="change-password" element={<ChangePassword />} />
+                  <Route path="users" element={<UserManagement />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
           </div>
-        </BrowserRouter>
+        </Router>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

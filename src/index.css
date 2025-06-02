@@ -95,6 +95,7 @@
   }
   .gold-text {
     color: #D4AF37;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
   }
   .gold-bg {
     background-color: #D4AF37;
@@ -125,4 +126,17 @@
   .strength-2 { width: 60%; background-color: #f59e0b; }
   .strength-3 { width: 80%; background-color: #10b981; }
   .strength-4 { width: 100%; background-color: #10b981; }
+  
+  .metallic-gold {
+    background: linear-gradient(45deg, #FFD700 0%, #FFA500 25%, #FFD700 50%, #B8860B 75%, #FFD700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 
+      0 1px 0 #B8860B,
+      0 2px 0 #DAA520,
+      0 3px 5px rgba(0,0,0,0.3),
+      0 0 20px rgba(255, 215, 0, 0.4);
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+  }
 }

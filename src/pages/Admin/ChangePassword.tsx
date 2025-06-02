@@ -9,14 +9,12 @@ const ChangePassword: React.FC = () => {
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -43,8 +41,8 @@ const ChangePassword: React.FC = () => {
     let strength = 0;
     
     // Length
+    if (password.length >= 6) strength++;
     if (password.length >= 8) strength++;
-    if (password.length >= 12) strength++;
     
     // Contains uppercase, lowercase, numbers and special chars
     if (/[A-Z]/.test(password)) strength++;
@@ -62,7 +60,7 @@ const ChangePassword: React.FC = () => {
     e.preventDefault();
     
     // Validate inputs
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+    if (!formData.newPassword || !formData.confirmPassword) {
       toast({
         title: "Erro",
         description: "Todos os campos são obrigatórios.",
@@ -72,10 +70,10 @@ const ChangePassword: React.FC = () => {
     }
     
     // Check if new password meets requirements
-    if (formData.newPassword.length < 8) {
+    if (formData.newPassword.length < 6) {
       toast({
         title: "Erro",
-        description: "A nova senha deve ter pelo menos 8 caracteres.",
+        description: "A nova senha deve ter pelo menos 6 caracteres.",
         variant: "destructive"
       });
       return;
@@ -94,7 +92,7 @@ const ChangePassword: React.FC = () => {
     setLoading(true);
     
     try {
-      const result = await changePassword(formData.currentPassword, formData.newPassword);
+      const result = await changePassword(formData.newPassword);
       
       if (result.success) {
         toast({
@@ -104,7 +102,6 @@ const ChangePassword: React.FC = () => {
         
         // Reset form
         setFormData({
-          currentPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
@@ -139,27 +136,6 @@ const ChangePassword: React.FC = () => {
         className="bg-dark-700 p-6 rounded-lg shadow border border-gold-500"
       >
         <div className="mb-4">
-          <label htmlFor="currentPassword" className="block gold-text mb-2">Senha Atual</label>
-          <div className="relative">
-            <input 
-              type={showCurrentPassword ? "text" : "password"}
-              id="currentPassword"
-              value={formData.currentPassword}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 bg-dark-800 border-gold-500 text-white" 
-              required
-            />
-            <button 
-              type="button"
-              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              className="absolute right-3 top-3 text-gold-500 hover:text-gold-600"
-            >
-              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-        
-        <div className="mb-4">
           <label htmlFor="newPassword" className="block gold-text mb-2">Nova Senha</label>
           <div className="relative">
             <input 
@@ -180,7 +156,7 @@ const ChangePassword: React.FC = () => {
           </div>
           <div className={`password-strength strength-${passwordStrength}`}></div>
           <div className="text-xs text-gold-500 mt-1">
-            A senha deve conter pelo menos 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.
+            A senha deve conter pelo menos 6 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.
           </div>
         </div>
         
@@ -215,7 +191,6 @@ const ChangePassword: React.FC = () => {
             type="button"
             onClick={() => {
               setFormData({
-                currentPassword: '',
                 newPassword: '',
                 confirmPassword: ''
               });

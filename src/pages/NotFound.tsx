@@ -3,6 +3,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const NotFound: React.FC = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate("/");
+    }, 0); // redireciona após 3 segundos
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark-800">
       <div className="text-center px-4">

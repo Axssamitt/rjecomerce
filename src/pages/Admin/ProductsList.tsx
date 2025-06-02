@@ -1,8 +1,30 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../integrations/supabase/client';
 import { Product } from '../../types/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Edit, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const ProductsList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,13 +44,7 @@ const ProductsList: React.FC = () => {
         throw error;
       }
 
-      // Transform data to include purchase_link
-      const productsWithPurchaseLink = data?.map(product => ({
-        ...product,
-        purchase_link: product.image_url || '' // Using image_url as fallback for purchase_link
-      })) || [];
-
-      setProducts(productsWithPurchaseLink);
+      setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast({
@@ -46,30 +62,28 @@ const ProductsList: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este produto?')) {
-      try {
-        const { error } = await supabase
-          .from('products')
-          .delete()
-          .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
 
-        if (error) {
-          throw error;
-        }
-
-        setProducts(products.filter(product => product.id !== id));
-        toast({
-          title: "Sucesso",
-          description: "Produto excluído com sucesso!",
-        });
-      } catch (error) {
-        console.error('Error deleting product:', error);
-        toast({
-          title: "Erro ao excluir produto",
-          description: "Não foi possível excluir o produto. Tente novamente mais tarde.",
-          variant: "destructive"
-        });
+      if (error) {
+        throw error;
       }
+
+      setProducts(products.filter(product => product.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Produto excluído com sucesso!",
+      });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Erro ao excluir produto",
+        description: "Não foi possível excluir o produto. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -98,56 +112,92 @@ const ProductsList: React.FC = () => {
           </Link>
         </div>
       ) : (
-        <div className="rounded-lg shadow overflow-hidden border border-gold-500">
-          <table className="min-w-full divide-y divide-gold-500">
-            <thead className="table-header">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Imagem</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Preço</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Link</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="bg-dark-700 divide-y divide-gold-500">
+        <div className="bg-dark-700 rounded-lg border border-gold-500 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-gold-500">
+                <TableHead className="text-gold-500 font-medium">Ações</TableHead>
+                <TableHead className="text-gold-500 font-medium">Imagem</TableHead>
+                <TableHead className="text-gold-500 font-medium">Nome</TableHead>
+                <TableHead className="text-gold-500 font-medium">Preço</TableHead>
+                <TableHead className="text-gold-500 font-medium">Link</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {products.map((product) => (
-                <tr key={product.id} className="table-row">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <img 
-                        className="h-10 w-10 rounded-full object-cover" 
-                        src={product.image_url} 
-                        alt={product.name}
-                      />
+                <TableRow key={product.id} className="border-gold-500 hover:bg-dark-600">
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/admin/edit-product/${product.id}`)}
+                        className="h-8 w-8 text-gold-500 hover:text-gold-600 hover:bg-dark-600"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-dark-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-dark-700 border border-gold-500">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-white">Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-300">
+                              Tem certeza que deseja excluir o produto "{product.name}"? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-dark-600 border-gold-500 text-white hover:bg-dark-500">
+                              Cancelar
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(product.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex-shrink-0 h-10 w-10">
+                      {product.image_url ? (
+                        <img 
+                          className="h-10 w-10 rounded-full object-cover" 
+                          src={product.image_url} 
+                          alt={product.name}
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <span className="text-gray-500 text-xs">Sem imagem</span>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm font-medium text-white">{product.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm gold-text">R$ {product.price.toFixed(2)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-300 truncate max-w-xs">{product.purchase_link}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    <button 
-                      onClick={() => navigate(`/admin/edit-product/${product.id}`)}
-                      className="gold-text hover:text-gold-600 mr-3"
-                    >
-                      Editar
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-400 hover:text-red-600"
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-300 truncate max-w-xs">
+                      {product.purchase_link || 'N/A'}
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
